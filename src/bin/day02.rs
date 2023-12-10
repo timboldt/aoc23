@@ -6,9 +6,10 @@ use nom::{
     branch::alt,
     bytes::complete::tag,
     character::complete::digit1,
+    combinator::{map_res, recognize},
     multi::separated_list1,
     sequence::{delimited, tuple},
-    IResult, ParseTo,
+    IResult,
 };
 
 use std::time::Instant;
@@ -26,40 +27,47 @@ struct Game {
     selections: Vec<CubeSet>,
 }
 
-fn parse_cubeset(input: &[u8]) -> IResult<&[u8], CubeSet> {
+fn parse_cubeset(input: &str) -> IResult<&str, CubeSet> {
     let (rest, val) = separated_list1(
         tag(", "),
         tuple((
-            digit1,
+            map_res(recognize(digit1), str::parse::<u32>),
             tag(" "),
             alt((tag("red"), tag("blue"), tag("green"))),
         )),
     )(input)?;
+
     let mut cs: CubeSet = CubeSet::default();
-    for v in val {
-        match v.2[0] {
-            b'r' => cs.red = v.0.parse_to().unwrap(),
-            b'g' => cs.green = v.0.parse_to().unwrap(),
-            b'b' => cs.blue = v.0.parse_to().unwrap(),
+    for (n, _, color) in val {
+        match color {
+            "red" => cs.red = n,
+            "green" => cs.green = n,
+            "blue" => cs.blue = n,
             _ => unreachable!(),
         }
     }
     Ok((rest, cs))
 }
 
-fn parse_game(input: &[u8]) -> IResult<&[u8], Game> {
-    let mut g: Game = Game::default();
-    let (rest, id) = delimited(tag("Game "), digit1, tag(": "))(input)?;
-    g.id = id.parse_to().unwrap_or_default();
+fn parse_game(input: &str) -> Game {
+    let (rest, id) = delimited(
+        tag("Game "),
+        map_res(
+            recognize(digit1::<&str, nom::error::Error<&str>>),
+            str::parse::<u32>,
+        ),
+        tag(": "),
+    )(input)
+    .unwrap();
 
-    let (rest, selections) = separated_list1(tag("; "), parse_cubeset)(rest)?;
-    g.selections = selections;
-    Ok((rest, g))
+    let (_rest, selections) = separated_list1(tag("; "), parse_cubeset)(rest).unwrap();
+
+    Game { id, selections }
 }
 
 fn part1(input: &str) -> u32 {
     input.lines().fold(0, |acc, s| {
-        let game = parse_game(s.as_bytes()).unwrap_or_default().1;
+        let game = parse_game(s);
         let found_bad = game
             .selections
             .iter()
@@ -73,7 +81,7 @@ fn part1(input: &str) -> u32 {
 
 fn part2(input: &str) -> u32 {
     input.lines().fold(0, |acc, s| {
-        let game = parse_game(s.as_bytes()).unwrap_or_default().1;
+        let game = parse_game(s);
         let fewest = game
             .selections
             .iter()
@@ -100,8 +108,7 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    const SAMPLE1: &str = r"
-Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
+    const SAMPLE1: &str = r"Game 1: 3 blue, 4 red; 1 red, 2 green, 6 blue; 2 green
 Game 2: 1 blue, 2 green; 3 green, 4 blue, 1 red; 1 green, 1 blue
 Game 3: 8 green, 6 blue, 20 red; 5 blue, 4 red, 13 green; 5 green, 1 red
 Game 4: 1 green, 3 red, 6 blue; 3 green, 6 red; 3 green, 15 blue, 14 red
