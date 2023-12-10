@@ -48,7 +48,7 @@ fn parse_cubeset(input: &[u8]) -> IResult<&[u8], CubeSet> {
     Ok((rest, cs))
 }
 
-fn parse_part1(input: &[u8]) -> IResult<&[u8], Game> {
+fn parse_game(input: &[u8]) -> IResult<&[u8], Game> {
     let mut g: Game = Game::default();
     let (rest, id) = delimited(tag("Game "), digit1, tag(": "))(input)?;
     g.id = id.parse_to().unwrap_or_default();
@@ -58,13 +58,9 @@ fn parse_part1(input: &[u8]) -> IResult<&[u8], Game> {
     Ok((rest, g))
 }
 
-fn parse_part2(input: &[u8]) -> IResult<&[u8], u32> {
-    Ok((input, 42))
-}
-
 fn part1(input: &str) -> u32 {
     input.lines().fold(0, |acc, s| {
-        let game = parse_part1(s.as_bytes()).unwrap_or_default().1;
+        let game = parse_game(s.as_bytes()).unwrap_or_default().1;
         let found_bad = game
             .selections
             .iter()
@@ -77,10 +73,17 @@ fn part1(input: &str) -> u32 {
 }
 
 fn part2(input: &str) -> u32 {
-    // input.lines().fold(0, |acc, s| {
-    //     acc + parse_part2(s.as_bytes()).unwrap_or_default().1
-    // })
-    42
+    input.lines().fold(0, |acc, s| {
+        let game = parse_game(s.as_bytes()).unwrap_or_default().1;
+        let fewest = game.selections.iter().fold(CubeSet::default(), |acc, cs| {
+            CubeSet {
+                red: std::cmp::max(acc.red, cs.red),
+                green:  std::cmp::max(acc.green, cs.green),
+                blue: std::cmp::max(acc.blue, cs.blue),
+             }
+        });
+        acc + fewest.red * fewest.green *fewest.blue
+    })
 }
 
 fn main() {
@@ -110,9 +113,9 @@ Game 5: 6 red, 1 blue, 3 green; 2 blue, 1 red, 2 green";
         assert_eq!(8, sum);
     }
 
-    // #[test]
-    // fn part2_works() {
-    //     let sum = super::part2(SAMPLE2);
-    //     assert_eq!(281, sum);
-    // }
+    #[test]
+    fn part2_works() {
+        let sum = super::part2(SAMPLE1);
+        assert_eq!(2286, sum);
+    }
 }
