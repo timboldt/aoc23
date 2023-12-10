@@ -3,14 +3,12 @@
 extern crate nom;
 
 use nom::{
-    branch::alt,
     bytes::complete::tag,
     character::complete::digit1,
     combinator::{map_res, recognize},
-    error::ErrorKind,
     multi::{many0, many1, separated_list1},
     sequence::{delimited, preceded, tuple},
-    Finish, IResult, ParseTo,
+    IResult,
 };
 
 use std::collections::BTreeSet;
@@ -40,7 +38,7 @@ fn parse_scratchcard(input: &str) -> ScratchCard {
     if input.len() > 0 {
         let (_, (id, numbers)) = tuple((
             delimited(
-                tag("Card "),
+                tuple((tag("Card"), many1(tag(" ")))),
                 map_res(recognize(digit1), str::parse::<u32>),
                 tag(":"),
             ),
@@ -72,7 +70,7 @@ fn part1(input: &str) -> u32 {
     })
 }
 
-fn part2(input: &str) -> u32 {
+fn part2(_input: &str) -> u32 {
     42
 }
 
