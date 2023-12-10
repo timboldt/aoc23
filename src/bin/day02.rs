@@ -4,14 +4,14 @@ extern crate nom;
 
 use nom::{
     branch::alt,
-    bytes::complete::{tag},
-    character::complete::{digit1},
-    multi::{separated_list1},
+    bytes::complete::tag,
+    character::complete::digit1,
+    multi::separated_list1,
     sequence::{delimited, tuple},
     IResult, ParseTo,
 };
 
-use std::{time::Instant};
+use std::time::Instant;
 
 #[derive(Default, Debug)]
 struct CubeSet {
