@@ -4,15 +4,14 @@ extern crate nom;
 
 use nom::{
     branch::alt,
-    bytes::complete::{tag, take},
-    character::complete::{alphanumeric1, digit1, space1},
-    combinator::value,
-    multi::{many1, separated_list1},
-    sequence::{delimited, preceded, tuple},
+    bytes::complete::{tag},
+    character::complete::{digit1},
+    multi::{separated_list1},
+    sequence::{delimited, tuple},
     IResult, ParseTo,
 };
 
-use std::{default, time::Instant};
+use std::{time::Instant};
 
 #[derive(Default, Debug)]
 struct CubeSet {
@@ -65,10 +64,10 @@ fn part1(input: &str) -> u32 {
             .selections
             .iter()
             .find(|&cs| cs.red > 12 || cs.blue > 14 || cs.green > 13);
-        return match found_bad {
+        match found_bad {
             Some(_) => acc,
             None => acc + game.id,
-        };
+        }
     })
 }
 
