@@ -74,14 +74,15 @@ fn part1(input: &str) -> u32 {
 fn part2(input: &str) -> u32 {
     input.lines().fold(0, |acc, s| {
         let game = parse_game(s.as_bytes()).unwrap_or_default().1;
-        let fewest = game.selections.iter().fold(CubeSet::default(), |acc, cs| {
-            CubeSet {
+        let fewest = game
+            .selections
+            .iter()
+            .fold(CubeSet::default(), |acc, cs| CubeSet {
                 red: std::cmp::max(acc.red, cs.red),
-                green:  std::cmp::max(acc.green, cs.green),
+                green: std::cmp::max(acc.green, cs.green),
                 blue: std::cmp::max(acc.blue, cs.blue),
-             }
-        });
-        acc + fewest.red * fewest.green *fewest.blue
+            });
+        acc + fewest.red * fewest.green * fewest.blue
     })
 }
 
