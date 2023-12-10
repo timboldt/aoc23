@@ -5,40 +5,40 @@ extern crate nom;
 use nom::{
     branch::alt,
     bytes::complete::{tag, take},
-    combinator::value,
+    combinator::{value},
     multi::many1,
-    IResult,
 };
 
 use std::time::Instant;
 
-fn parse_part1(input: &[u8]) -> IResult<&[u8], u32> {
-    let (rest, digits) = many1(alt((
+fn parse_part1(input: &str) -> u32 {
+    let (_, digits) = many1(
         alt((
-            value(1u32, tag("1")),
-            value(2u32, tag("2")),
-            value(3u32, tag("3")),
-            value(4u32, tag("4")),
-            value(5u32, tag("5")),
-            value(6u32, tag("6")),
-            value(7u32, tag("7")),
-            value(8u32, tag("8")),
-            value(9u32, tag("9")),
+            alt((
+                value(1u32, tag::<&str, &str, nom::error::Error<&str>>("1")),
+                value(2u32, tag("2")),
+                value(3u32, tag("3")),
+                value(4u32, tag("4")),
+                value(5u32, tag("5")),
+                value(6u32, tag("6")),
+                value(7u32, tag("7")),
+                value(8u32, tag("8")),
+                value(9u32, tag("9")),
+            )),
+            value(0xFFu32, take(1usize)),
         )),
-        value(0xFFu32, take(1usize)),
-    )))(input)?;
+    )(input)
+    .unwrap();
+
     let digits: Vec<u32> = digits.into_iter().filter(|&x| x != 0xFFu32).collect();
 
-    Ok((
-        rest,
-        digits.first().unwrap_or(&0u32) * 10 + digits.last().unwrap_or(&0u32),
-    ))
+    digits.first().unwrap_or(&0u32) * 10 + digits.last().unwrap_or(&0u32)
 }
 
-fn parse_part2(input: &[u8]) -> IResult<&[u8], u32> {
+fn parse_part2(input: &str) -> u32 {
     let (_, first_digits) = many1(alt((
         alt((
-            value(1u32, tag("one")),
+            value(1u32, tag::<&str, &str, nom::error::Error<&str>>("one")),
             value(2u32, tag("two")),
             value(3u32, tag("three")),
             value(4u32, tag("four")),
@@ -60,12 +60,13 @@ fn parse_part2(input: &[u8]) -> IResult<&[u8], u32> {
             value(9u32, tag("9")),
         )),
         value(0xFFu32, take(1usize)),
-    )))(input)?;
+    )))(input)
+    .unwrap();
 
-    let (rest, last_digits) = many1(alt((
+    let (_, last_digits) = many1(alt((
         alt((
             // Tricky problem: some numbers can be overlapping and we need the last valid one.
-            value(1u32, tag("twone")),
+            value(1u32, tag::<&str, &str, nom::error::Error<&str>>("twone")),
             value(2u32, tag("eightwo")),
             value(3u32, tag("eighthree")),
             value(8u32, tag("oneight")),
@@ -96,25 +97,19 @@ fn parse_part2(input: &[u8]) -> IResult<&[u8], u32> {
             value(9u32, tag("9")),
         )),
         value(0xFFu32, take(1usize)),
-    )))(input)?;
+    )))(input)
+    .unwrap();
     let first_digits: Vec<u32> = first_digits.into_iter().filter(|&x| x != 0xFFu32).collect();
     let last_digits: Vec<u32> = last_digits.into_iter().filter(|&x| x != 0xFFu32).collect();
-    Ok((
-        rest,
-        first_digits.first().unwrap_or(&0u32) * 10 + last_digits.last().unwrap_or(&0u32),
-    ))
+    first_digits.first().unwrap_or(&0u32) * 10 + last_digits.last().unwrap_or(&0u32)
 }
 
 fn part1(input: &str) -> u32 {
-    input.lines().fold(0, |acc, s| {
-        acc + parse_part1(s.as_bytes()).unwrap_or_default().1
-    })
+    input.lines().fold(0, |acc, s| acc + parse_part1(s))
 }
 
 fn part2(input: &str) -> u32 {
-    input.lines().fold(0, |acc, s| {
-        acc + parse_part2(s.as_bytes()).unwrap_or_default().1
-    })
+    input.lines().fold(0, |acc, s| acc + parse_part2(s))
 }
 
 fn main() {
@@ -131,20 +126,18 @@ fn main() {
 
 #[cfg(test)]
 mod tests {
-    const SAMPLE1: &str = r"
-        1abc2
-        pqr3stu8vwx
-        a1b2c3d4e5f
-        treb7uchet";
+    const SAMPLE1: &str = r"1abc2
+pqr3stu8vwx
+a1b2c3d4e5f
+treb7uchet";
 
-    const SAMPLE2: &str = r"
-        two1nine
-        eightwothree
-        abcone2threexyz
-        xtwone3four
-        4nineeightseven2
-        zoneight234
-        7pqrstsixteen";
+    const SAMPLE2: &str = r"two1nine
+eightwothree
+abcone2threexyz
+xtwone3four
+4nineeightseven2
+zoneight234
+7pqrstsixteen";
 
     #[test]
     fn part1_works() {
